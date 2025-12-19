@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+  /* Hide "This application was created by a Google Apps Script user" banner */
+  body > div[style*="font-size:10px"][style*="text-align:center"] {
+    display: none !important;
+  }
+</style>
+
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Outstanding Technical Support Reports</title>
+  <!-- Paste inside <head> (after your existing <meta> and <title>) -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-gradient: linear-gradient(180deg,#f5f7fb 0%,#e9eef7 100%);
+    --card-bg: rgba(255,255,255,0.85);
+    --accent: #3A66B3;
+    --text: #2e2e2e;
+    --soft-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  }
+  
+  body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200%;       /* double width to avoid blanks */
+  height: 200%;      /* double height for diagonal movement */
+  background: repeating-linear-gradient(
+    120deg,
+    rgba(58,102,179,0.05),
+    rgba(58,102,179,0.05) 4px,
+    rgba(139,92,246,0.03) 4px,
+    rgba(139,92,246,0.03) 12px
+  );
+  pointer-events: none;
+  animation: moveLines 20s linear infinite;
+  z-index: 0;
+}
+
+@keyframes moveLines {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-50px, -50px) rotate(2deg); } /* move in negative direction for full coverage */
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+  /* ADD THIS RIGHT BELOW */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  html,body{height:100%}
+  body {
+  font-family: "Poppins", "Segoe UI", Arial, sans-serif;}; background: var(--bg-gradient); color: var(--text); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+</style>
+
+
+  <style>
+    body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #e0e7ff 0%, #f9fafb 100%);
+  color: #333;
+}
+#searchContainer {
+  display: none;      /* Hidden at first */
+  margin-top: 10px;   /* Optional – keeps nice spacing */
+}
+
+    /* --- HEADER AREA --- */
+   .banner {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  color: white;
+  text-align: center;
+  padding: 40px 20px 50px;
+  border-radius: 0 0 40px 40px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.banner::after {
+  content: "";
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  filter: blur(50px);
+  animation: float 6s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+  from { transform: translate(0, 0); }
+  to { transform: translate(40px, 30px); }
+}
+
+.title {
+  font-family: "Poppins", sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtitle {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  opacity: 0.9;
+  margin-top: 6px;
+  letter-spacing: 0.3px;
+}
+
+.version-badge {
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.2);
+  padding: 4px 10px;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+
+    /* --- MAIN CONTAINER --- */
+  .main {
+  margin: -28px auto 60px;
+  padding: 30px;
+  max-width: 980px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  display: none;
+}
+
+.main.show {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+@keyframes fadeInUp { from { opacity:0; transform: translateY(8px);} to { opacity:1; transform: translateY(0);} }
+    select, input[type=text] {
+      width: 100%;
+      padding: 16px;
+      font-size: 17px;
+      margin: 20px 0;
+      border-radius: 14px;
+      border: 1px solid #ccc;
+      background: linear-gradient(180deg, #ffffff, #f0f2f5);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      transition: all 0.2s;
+    }
+    select:focus, input[type=text]:focus {
+      outline: none;
+      border-color: #3a66b3;
+      box-shadow: 0 0 12px rgba(58,102,179,0.4);
+    }
+
+    /* --- CARD STYLING --- */
+    .card { background: rgba(255,255,255,0.85); padding: 22px 24px; margin-bottom: 22px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); border-top: 5px solid transparent; backdrop-filter: blur(6px); position: relative; transition: all 0.3s ease; }
+    .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+  border-color: #3a66b3; /* subtle top border highlight */
+}
+
+    .card.high-urgency { border-top: 5px solid red; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { box-shadow: 0 8px 20px rgba(255,0,0,0.2); } 50% { box-shadow: 0 12px 28px rgba(255,0,0,0.35); } }
+    .card div { margin: 6px 0; font-size: 14px; line-height: 1.5; word-break: break-word; }
+
+    /* --- FLASHING SIGNALS --- */
+    .flasher { position: absolute; top: 12px; width: 20px; height: 20px; border-radius: 50%; animation: strobe 2.5s infinite ease-in-out; box-shadow: 0 0 14px currentColor; }
+    .flasher.red { background-color: red; color: red; box-shadow: 0 0 16px red; right: 12px; }
+    .flasher.orange { background-color: orange; color: orange; right: 40px; box-shadow: 0 0 16px orange; }
+    @keyframes strobe {
+  0%, 5%, 10% { opacity: 1; box-shadow: 0 0 25px currentColor; } /* 3 quick flashes */
+  2.5%, 7.5%, 12.5% { opacity: 0; box-shadow: 0 0 5px currentColor; }
+  13%, 100% { opacity: 0; box-shadow: none; } /* pause period */
+}
+
+
+    /* --- BACKGROUND FLASHING --- */
+    .card.flash-red { animation: bgRedPulse 1.5s infinite; }
+    .card.flash-orange { animation: bgOrangePulse 1.5s infinite; }
+    .card.flash-both { animation: bgBothPulse 2s infinite; }
+    @keyframes bgRedPulse {0%,100%{background-color: rgba(255,0,0,0.05);}50%{background-color: rgba(255,0,0,0.12);}}
+    @keyframes bgOrangePulse {0%,100%{background-color: rgba(255,165,0,0.05);}50%{background-color: rgba(255,165,0,0.12);}}
+    @keyframes bgBothPulse {0%{background-color: rgba(255,0,0,0.08);}50%{background-color: rgba(255,165,0,0.08);}100%{background-color: rgba(255,0,0,0.08);}}
+    /* --- NEW REPORT INDICATOR --- */
+    .new-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #00b09b, #96c93d);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 8px;
+    margin-left: 8px;
+    animation: fadePulse 1.2s infinite;
+    }
+
+    @keyframes fadePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+    }
+
+    /* --- STATUS COLORS --- */
+    .status { display: inline-block; font-weight: bold; padding: 6px 16px; border-radius: 14px; color: #fff; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .Submitted { background: linear-gradient(135deg, #3498db, #5dade2); }
+    .Pending { background: linear-gradient(135deg, #f39c12, #f7b733); }
+    .Acknowledged { background: linear-gradient(135deg, #8e44ad, #a569bd); }
+    .InProgress { background: linear-gradient(135deg, #16a085, #1abc9c); }
+    .Completed {
+  background: linear-gradient(135deg, #a8e6a1, #8fd78f); /* light apple green gradient */
+  color: #1a3d12; /* optional: dark green text for contrast */
+}
+    .Cancelled { background: linear-gradient(135deg, #e74c3c, #c0392b); }  /* Red */
+
+
+    /* --- IMAGE GRID --- */
+    .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+    .image-grid img { width: 100%; height: 100px; object-fit: cover; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.2s, box-shadow 0.2s; }
+    .image-grid img:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
+
+    .no-data { text-align: center; color: #777; font-style: italic; margin-top: 30px; }
+
+    /* --- LIGHTBOX --- */
+    #lightbox { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); justify-content: center; align-items: center; }
+    #lightbox img { max-width: 90%; max-height: 90%; border-radius: 14px; box-shadow: 0 0 20px rgba(255,255,255,0.25); }
+
+    .copy-btn {
+  background: linear-gradient(135deg, #4b79a1, #283e51); 
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
+}
+    .copy-btn:hover { background: linear-gradient(135deg, #5c8cc4, #1f2b3a); transform: translateY(-2px) scale(1.05); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+
+    /* --- TOAST --- */
+    #toast { visibility: hidden; min-width: 160px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 8px 16px; position: fixed; z-index: 1000; bottom: 30px; left: 50%; transform: translateX(-50%); font-size: 14px; opacity: 0; transition: opacity 0.5s ease, visibility 0.5s; }
+    #toast.show { visibility: visible; opacity: 1; }
+
+    /* --- REFRESH TIMESTAMP --- */
+    #lastRefresh { margin-top: 12px; font-size: 13px; color: #666; text-align: right; font-style: italic; }
+
+    /* --- LOGIN POPUP --- */
+/* Full-screen overlay */
+#loginPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.35); /* slightly darker overlay for contrast */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px); /* subtle blur on background */
+}
+
+/* Popup content - glass effect */
+#loginPopup .popup-content {
+  background: rgba(255,255,255,0.15); /* semi-transparent */
+  backdrop-filter: blur(20px); /* glassmorphism */
+  padding: 40px 45px;
+  border-radius: 24px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.3); /* subtle glass border */
+  transition: transform 0.3s ease;
+}
+
+/* Heading */
+#loginPopup h2 {
+  margin-bottom: 28px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff; /* bright against semi-transparent background */
+}
+
+/* Button group */
+#loginPopup .button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+/* Gradient buttons */
+#loginPopup button {
+  padding: 14px;
+  font-size: 17px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #3a66b3, #8b5cf6);
+  box-shadow: 0 6px 16px rgba(58,102,179,0.4);
+  transition: all 0.3s ease;
+}
+
+#loginPopup button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(58,102,179,0.5);
+}
+
+/* Password input */
+#passwordDiv input {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0 16px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  outline: none;
+  font-size: 16px !important;
+}
+
+#passwordDiv input::placeholder {
+  color: rgba(255,255,255,0.7);
+  font-size: 16px !important;
+}
+
+/* Password login button */
+#passwordDiv button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #16a085, #1abc9c);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(22,160,133,0.4);
+  transition: all 0.3s ease;
+}
+
+#passwordDiv button:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(22,160,133,0.5);
+}
+
+/* Error message */
+#passMsg {
+  color: #ff4d4f;
+  font-weight: 500;
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+/* Mobile tweaks */
+@media (max-width: 500px) {
+  #loginPopup .popup-content {
+    padding: 32px 28px;
+    border-radius: 20px;
+  }
+  #loginPopup h2 { font-size: 20px; }
+  #loginPopup button { font-size: 16px; padding: 12px; border-radius: 14px; }
+  #passwordDiv input { font-size: 16px; padding: 12px; }
+  #passwordDiv button { font-size: 16px; padding: 12px; border-radius: 14px; }
+}
+
+#searchContainer {
+  display: none;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto 20px;
+}
+
+#searchBox {
+  width: 100%;          /* fill container width */
+  max-width: 500px;     /* optional: restrict maximum width */
+  margin: 0 auto;       /* center horizontally */
+  display: block;       /* necessary for margin auto to work */
+  box-sizing: border-box;
+}
+
+.card.Completed {
+  background-color: #e0f2e9 !important; /* keep card lighter */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card.Completed .status {
+  background: linear-gradient(135deg, #3cb371, #2e8b57); /* darker green gradient for badge */
+  color: #fff; /* keep text readable */
+}
+
+.card.Completed .flasher {
+  display: none; /* hide blinking dots */
+}
+
+.main {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.footer-version {
+  position: fixed;
+  bottom: 10px;
+  right: 15px;
+  font-size: 12px;
+  color: #555;
+  opacity: 0.7;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.6);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+#passwordDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;   /* optional: keep inputs/buttons aligned */
+  margin: 0 auto;     /* center horizontally */
+}
+
+#passwordDiv input,
+#passwordDiv button,
+#passwordDiv .back-button {
+  width: 100%;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 16px;
+  text-align: center;
+  box-sizing: border-box; /* ensures padding doesn't break width */
+}
+
+#passwordDiv .back-button {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.5);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+/* --- Universal Liquid Glass Buttons --- */
+button, .copy-btn, #techLoginBtn, #staffBtn, #techBtn, #backBtn {
+  background: rgba(255, 255, 255, 0.15);       /* semi-transparent glass */
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 16px;
+  padding: 14px 20px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+  transition: all 0.3s ease;
+}
+
+button:hover, .copy-btn:hover, #techLoginBtn:hover, #staffBtn:hover, #techBtn:hover, #backBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.18);
+}
+
+button:active, .copy-btn:active, #techLoginBtn:active, #staffBtn:active, #techBtn:active, #backBtn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+}
+
+.card .copy-btn {
+  font-size: 14px;          /* smaller text */
+  padding: 8px 12px;        /* reduce height and width */
+  border-radius: 12px;      /* slightly smaller corners */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  background: linear-gradient(135deg, #4b79a1, #283e51);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.card .copy-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+}
+
+
+/* Prevent iPhone Zoom on Interaction */
+input, button, select, textarea, .copy-btn, .status, .card div {
+  font-size: 16px !important;
+}
+
+
+  </style>
+</head>
+<body>
+  <div id="loginPopup">
+  <div class="popup-content">
+    <h2>Select User Type</h2>
+    <div class="button-group">
+      <button id="staffBtn">Outlet Staff</button>
+      <button id="techBtn">Technical</button>
+    </div>
+    <div id="passwordDiv" style="display:none;">
+  <button id="backBtn" class="back-button">← Back</button>
+  <input type="password" id="techPassword" placeholder="Enter Password">
+  <button id="techLoginBtn">Login</button>
+  <p id="passMsg"></p>
+</div>
+  </div>
+</div>
+
+  <!-- HEADER -->
+  <div class="banner">
+    <img src="https://i.postimg.cc/LnDgZ2ny/logo.png" alt="Company Logo">
+    <h1>Technical Support Dashboard</h1>
+    <p class="version">Outstanding Reports & Task Status</p>
+  </div>
+
+  <!-- MAIN BODY -->
+  <div class="main" style="display:none;">
+    <select id="outlet" onchange="onOutletChange()">
+      <option value="">Select Outlet</option>
+    </select>
+    <div id="searchContainer">
+  <input type="text" id="searchBox" placeholder="Search reports..." oninput="filterReports()">
+</div>
+
+
+    <div id="cardsContainer" class="no-data">Please select an outlet to view reports.</div>
+    <div id="lastRefresh"></div>
+  </div>
+
+  <!-- LIGHTBOX -->
+  <div id="lightbox" onclick="this.style.display='none'"><img src="" alt="Enlarged Image"></div>
+
+  <!-- TOAST -->
+  <div id="toast">Ticket copied!</div>
+
+  <script>
+    let reports = [], isTech = false;
+    let outletSelected = false;
+
+    function getMalaysiaNow() {
+      return new Date().toLocaleString('en-GB', { timeZone:'Asia/Kuala_Lumpur', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+    }
+    function updateLastRefresh(){ document.getElementById('lastRefresh').textContent = 'Last refreshed: '+getMalaysiaNow()+' (GMT+8)'; }
+
+    function reloadReports() {
+  google.script.run.withSuccessHandler(function(data) {
+    reports = data;
+    // Reapply outlet + search visibility after refresh
+    if (outletSelected) {
+      document.getElementById('searchContainer').style.display = 'block';
+    } else {
+      document.getElementById('searchContainer').style.display = 'none';
+    }
+    filterReports();
+  }).getReports();
+
+
+  // Load outlets only once (on first load)
+  if (!document.getElementById('outlet').options.length || document.getElementById('outlet').options.length === 1) {
+    google.script.run.withSuccessHandler(outlets => {
+      const select = document.getElementById('outlet');
+      select.innerHTML = '<option value="">Select Outlet</option>';
+      outlets.forEach(o => {
+        const option = document.createElement('option');
+        option.value = o;
+        option.text = o;
+        select.add(option);
+      });
+    }).getOutlets();
+  }
+}
+    function clearSearchAndFilter() {
+  const searchBox = document.getElementById('searchBox');
+  if (searchBox) searchBox.value = ''; // clear the search box
+  filterReports(); // run your existing filter logic
+}
+
+function onOutletChange() {
+  const outlet = document.getElementById('outlet').value;
+  const searchContainer = document.getElementById('searchContainer');
+  const searchBox = document.getElementById('searchBox');
+
+  // ✅ Always clear search box when outlet changes
+  if (searchBox) {
+    searchBox.value = '';
+  }
+
+  // ✅ Show or hide search box depending on outlet
+  if (outlet) {
+    outletSelected = true;
+    searchContainer.style.display = 'block';
+  } else {
+    outletSelected = false;
+    searchContainer.style.display = 'none';
+  }
+
+  // ✅ Re-filter reports based on new outlet
+  filterReports();
+}
+
+  function filterReports() {
+  const outlet = document.getElementById('outlet').value.toLowerCase();
+  const searchContainer = document.getElementById('searchContainer');
+  const searchBox = document.getElementById('searchBox');
+  const keyword = searchBox ? searchBox.value.toLowerCase() : '';
+
+  // Staff: detect outlet selection
+  if (!isTech) {
+    outletSelected = !!outlet;
+  }
+
+  // Handle search box visibility
+  if (!isTech) {
+    searchContainer.style.display = outletSelected ? 'block' : 'none';
+    if (!outletSelected && searchBox) searchBox.value = '';
+  } else {
+    searchContainer.style.display = 'none'; // tech never sees it
+  }
+
+  // Filter reports by outlet first
+  let filtered = reports.filter(r => !outlet || r.outlet.toLowerCase().includes(outlet));
+
+  // Technician filters
+  if (isTech) {
+    filtered = filtered.filter(r => !/completed|cancelled/i.test(r.status)); // always exclude Completed/Cancelled
+    if (!outlet) {
+      // Main page: only NEW reports
+      const now = new Date();
+      filtered = filtered.filter(r => {
+        const submitted = r.submit ? new Date(r.submit) : null;
+        return submitted && (now - submitted) / (1000 * 60 * 60) < 24; // last 24 hours
+      });
+    }
+  }
+
+  // Staff: keyword search only when outlet selected
+  if (!isTech && outletSelected && keyword) {
+    filtered = filtered.filter(r =>
+      (r.ticket && r.ticket.toLowerCase().includes(keyword)) ||
+      (r.description && r.description.toLowerCase().includes(keyword)) ||
+      (r.location && r.location.toLowerCase().includes(keyword)) ||
+      (r.urgency && r.urgency.toLowerCase().includes(keyword)) ||
+      (r.status && r.status.toLowerCase().includes(keyword))
+    );
+  }
+
+  // Sort by submission date
+  filtered.sort((a, b) => new Date(b.submit) - new Date(a.submit));
+
+  // Staff: no outlet message
+  if (!isTech && !outletSelected) {
+    const container = document.getElementById('cardsContainer');
+    container.className = 'no-data';
+    container.innerHTML = 'Please select an outlet to view reports.';
+    return;
+  }
+
+  renderCards(filtered);
+  updateLastRefresh();
+}
+
+    function renderCards(data){
+      const container=document.getElementById('cardsContainer'); container.className=''; container.innerHTML='';
+      if(data.length===0){ container.className='no-data'; container.innerHTML='Status: All green ✅'; return; }
+      data.forEach(r=>{
+        const card=document.createElement('div'); 
+card.className='card';
+
+// Apply visual cues
+if (/completed/i.test(r.status)) {
+  card.classList.add('Completed'); // use CSS green
+} else if (/cancelled/i.test(r.status)) {
+  card.style.backgroundColor = '#e0e0e0'; // gray background for Cancelled
+  card.querySelectorAll('.flasher').forEach(f => f.style.display = 'none');
+}
+ else {
+  const isRed = r.urgency && /high|urgent/i.test(r.urgency),
+        isOrange = r.outOfService && r.outOfService.toLowerCase() === 'yes';
+  if (isRed && isOrange) card.classList.add('flash-both','high-urgency'); 
+  else if (isRed) card.classList.add('flash-red','high-urgency'); 
+  else if (isOrange) card.classList.add('flash-orange');
+  if (isRed){ let red=document.createElement('div'); red.className='flasher red'; card.appendChild(red); }
+  if (isOrange){ let orange=document.createElement('div'); orange.className='flasher orange'; card.appendChild(orange); }
+}
+
+        let imageHTML = '';
+if (/completed/i.test(r.status) && r.completionImage) {
+  // Use completionImage column
+  const imgs = r.completionImage.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean)
+               .map(link => `<div><img src="${link}" alt="Completion Image" onclick="openLightbox('${link}')"><a href="${link}" target="_blank" style="display:none;">Download</a></div>`).join('');
+  imageHTML = `<div><strong>Completion Image:</strong></div><div class="image-grid">${imgs}</div>`;
+} else if (r.image) {
+  // Normal images for other statuses
+  const imgs = r.image.split(/[\n,]+/).map(i=>i.trim()).filter(Boolean)
+               .map(link => `<div><img src="${link}" onclick="openLightbox('${link}')"><a href="${link}" target="_blank" style="display:none;">Download</a></div>`).join('');
+  imageHTML = `<div class="image-grid">${imgs}</div>`;
+}
+
+
+        let formattedDate=r.submit?new Date(r.submit).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+        // --- Mark as NEW if submitted within last 24 hours ---
+        let isNew = false;
+        if (r.submit) {
+          const submittedTime = new Date(r.submit);
+          const now = new Date();
+          const hoursDiff = (now - submittedTime) / (1000 * 60 * 60);
+          if (hoursDiff < 24) isNew = true; // less than 24 hours old
+        }
+
+        card.innerHTML+=`
+          <div class="status ${r.status.replace(/\s/g,'')}">${r.status}</div>
+<div>
+  <strong>Ticket:</strong> ${r.ticket}
+  ${isNew ? `<span class="new-badge">NEW</span>` : ''}
+  ${isTech ? `<button class="copy-btn glass-btn" onclick="redirectToTally('${r.ticket}')">Submit Completion</button>` : ''}
+</div>
+
+          <div><strong>Submitted:</strong> ${formattedDate}</div>
+          <div><strong>Outlet:</strong> ${r.outlet}</div>
+          <div><strong>Description:</strong> ${r.description||''}</div>
+          <div><strong>Location:</strong> ${r.location||''}</div>
+          <div><strong>Urgency:</strong> ${r.urgency||''}</div>
+          <div><strong>Out of Service:</strong> ${r.outOfService||''}</div>
+          ${imageHTML}
+        `;
+      // --- Show Estimated Completion Date (for ongoing tasks only) ---
+if (!/completed/i.test(r.status) && r.etc && r.etc.trim() !== "") {
+  card.innerHTML += `
+    <div style="margin-top:6px;color:#555;font-size:0.9em;font-style:italic;">
+      Estimated Completion: 📅 ${new Date(r.etc).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+    </div>
+  `;
+}
+if (r.remarks && r.remarks.trim() !== '') {
+  card.innerHTML += `
+    <div class="remarks">
+      <strong>Status Update:</strong> ${r.remarks}
+    </div>
+  `;
+}
+
+        container.appendChild(card);
+      });
+    }
+
+    function openLightbox(src){ const lb=document.getElementById('lightbox'); lb.style.display='flex'; lb.querySelector('img').src=src; }
+    function redirectToTally(ticket){ navigator.clipboard.writeText(ticket).catch(()=>{}); window.open(`https://tally.so/r/wopYj5?ticket=${encodeURIComponent(ticket)}`,'_blank'); }
+
+    function loginStaff() {
+  isTech = false;
+  document.getElementById('loginPopup').style.display = 'none';
+  document.querySelector('.main').classList.add('show');
+  document.getElementById('searchContainer').style.display = 'block'; // show search box
+  loadData();
+}
+    function showPassword(){ document.getElementById('passwordDiv').style.display='block'; }
+    function loginTech() {
+  const pw = document.getElementById('techPassword').value;
+  if (pw === 'tech0000') {
+    isTech = true;
+    document.getElementById('loginPopup').style.display = 'none';
+    document.querySelector('.main').style.display = 'block';
+    document.getElementById('searchContainer').style.display = 'none'; // hide search box
+    loadData();
+  } else {
+    document.getElementById('passMsg').textContent = 'Incorrect password!';
+  }
+}
+function loadData() {
+  reloadReports(); // just run your existing data loader
+}
+
+
+    setInterval(loadData, 30000);
+
+    document.getElementById('staffBtn').addEventListener('click', () => {
+  isTech = false;
+  document.getElementById('loginPopup').style.display = 'none';
+  document.querySelector('.main').style.display = 'block';
+  document.getElementById('searchContainer').style.display = 'block'; // show search box for staff
+  loadData();
+});
+
+document.getElementById('techBtn').addEventListener('click', () => {
+  document.getElementById('passwordDiv').style.display = 'flex';
+  document.getElementById('staffBtn').style.display = 'none';  // hide staff button
+});
+
+
+document.getElementById('techLoginBtn').addEventListener('click', () => {
+  const pw = document.getElementById('techPassword').value;
+  if (pw === 'tech0000') {
+    isTech = true;
+    document.getElementById('loginPopup').style.display = 'none';
+    document.querySelector('.main').style.display = 'block';
+    document.getElementById('searchContainer').style.display = 'none'; // hide search box for tech
+    loadData();
+  } else {
+    document.getElementById('passMsg').textContent = 'Incorrect password!';
+  }
+});
+
+document.getElementById('backBtn').addEventListener('click', () => {
+  // Hide passwordDiv
+  document.getElementById('passwordDiv').style.display = 'none';
+  // Show staff & tech buttons again
+  document.getElementById('staffBtn').style.display = 'block';
+  document.getElementById('techBtn').style.display = 'block';
+  // Clear password field and error message
+  document.getElementById('techPassword').value = '';
+  document.getElementById('passMsg').textContent = '';
+});
+
+
+  </script>
+  <div class="footer-version">v2.1.4</div>
+
+
+</body>
+</html>
